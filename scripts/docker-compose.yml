@@ -1,0 +1,41 @@
+version: "3.8"
+
+volumes:
+  go-cache:
+    external: true
+
+networks:
+  app:
+    driver: bridge
+    name: pow-app
+    ipam:
+      config:
+        - subnet: 172.77.0.0/16
+          gateway: 172.77.0.1
+
+services:
+  redis:
+    image: 'redis'
+    ports:
+      - "6379:6379"
+    networks:
+      app:
+        ipv4_address: 172.77.0.20
+
+  go:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ../:/root/.go/src/pow-b
+      - ~/go/pkg:/root/.go/pkg
+    depends_on:
+      - redis
+    networks:
+      app:
+        ipv4_address: 172.77.0.21
+    command: make run
+#    command: sleep 3600
+    working_dir: /root/.go/src/pow-b
+    ports:
+      - "8081:8081"
